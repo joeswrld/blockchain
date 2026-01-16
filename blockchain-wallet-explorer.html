@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Wallet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .wallet-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .create-btn { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .balance-btn { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .send-btn { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        .mine-btn { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+            font-family: monospace;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .wallet-info {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .balance-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .transaction-history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Blockchain Wallet</h1>
+        
+        <!-- Wallet Management -->
+        <div class="wallet-section">
+            <div class="section-title">Your Wallet</div>
+            <div class="controls">
+                <button class="create-btn" onclick="createWallet()">🔑 Create New Wallet</button>
+                <button class="balance-btn" onclick="showBalanceForm()">💵 Check Balance</button>
+                <button class="send-btn" onclick="showSendForm()">📤 Send Coins</button>
+                <button class="mine-btn" onclick="mineBlock()">⛏️ Mine Block</button>
+            </div>
+
+            <div id="walletInfo" class="hidden">
+                <!-- Wallet details will appear here -->
+            </div>
+        </div>
+
+        <!-- Balance Check Form -->
+        <div id="balanceForm" class="wallet-section hidden">
+            <div class="section-title">Check Balance</div>
+            <div class="form-group">
+                <label>Wallet Address</label>
+                <input type="text" id="balanceAddress" placeholder="Enter wallet address">
+            </div>
+            <button class="balance-btn" onclick="checkBalance()">Check Balance</button>
+            <div id="balanceResult"></div>
+        </div>
+
+        <!-- Send Coins Form -->
+        <div id="sendForm" class="wallet-section hidden">
+            <div class="section-title">Send Coins</div>
+            <div class="form-group">
+                <label>Your Address (Sender)</label>
+                <input type="text" id="senderAddress" placeholder="Your wallet address">
+            </div>
+            <div class="form-group">
+                <label>Your Private Key</label>
+                <textarea id="privateKey" placeholder="Paste your private key here"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Recipient Address</label>
+                <input type="text" id="recipientAddress" placeholder="Recipient's wallet address">
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="amount" placeholder="Amount to send" min="0" step="0.01">
+            </div>
+            <button class="send-btn" onclick="sendCoins()">Send Coins</button>
+            <div id="sendResult"></div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="wallet-section" id="output">
+            <div class="section-title">Activity</div>
+            <p style="text-align: center; color: #999;">Create a wallet or check balance to get started</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        function showBalanceForm() {
+            document.getElementById('balanceForm').classList.remove('hidden');
+            document.getElementById('sendForm').classList.add('hidden');
+        }
+
+        function showSendForm() {
+            document.getElementById('sendForm').classList.remove('hidden');
+            document.getElementById('balanceForm').classList.add('hidden');
+        }
+
+        async function createWallet() {
+            try {
+                const response = await fetch(`${API_URL}/wallet/new`);
+                const data = await response.json();
+                
+                const walletHtml = `
+                    <div class="success">✅ Wallet created successfully!</div>
+                    <div class="wallet-info">
+                        <p><strong>Address:</strong></p>
+                        <div class="wallet-address">
+                            ${data.address}
+                            <button class="copy-btn" onclick="copyToClipboard('${data.address}')">Copy</button>
+                        </div>
+                        
+                        <p><strong>Public Key:</strong></p>
+                        <div class="wallet-address" style="font-size: 10px;">
+                            ${data.public_key}
+                        </div>
+                        
+                        <p><strong>Private Key:</strong></p>
+                        <div class="wallet-address" style="font-size: 10px;">
+                            ${data.private_key}
+                            <button class="copy-btn" onclick="copyToClipboard(\`${data.private_key.replace(/`/g, '\\`')}\`)">Copy</button>
+                        </div>
+                    </div>
+                    <div class="warning">
+                        ⚠️ <strong>IMPORTANT:</strong> Save your private key securely! 
+                        You will need it to send coins. Never share it with anyone!
+                    </div>
+                `;
+                
+                document.getElementById('walletInfo').innerHTML = walletHtml;
+                document.getElementById('walletInfo').classList.remove('hidden');
+                
+                document.getElementById('output').innerHTML = `
+                    <div class="section-title">Activity</div>
+                    <div class="success">New wallet created! Address: ${data.address}</div>
+                `;
+            } catch (error) {
+                showError('Failed to create wallet: ' + error.message);
+            }
+        }
+
+        async function checkBalance() {
+            const address = document.getElementById('balanceAddress').value;
+            
+            if (!address) {
+                showError('Please enter a wallet address');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/wallet/balance/${address}`);
+                const data = await response.json();
+                
+                document.getElementById('balanceResult').innerHTML = `
+                    <div class="balance-display">
+                        ${data.balance} coins
+                    </div>
+                    <p style="text-align: center; color: #666;">
+                        Address: ${data.address}
+                    </p>
+                `;
+            } catch (error) {
+                document.getElementById('balanceResult').innerHTML = `
+                    <div class="error">Failed to check balance: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function sendCoins() {
+            const senderAddress = document.getElementById('senderAddress').value;
+            const privateKey = document.getElementById('privateKey').value;
+            const recipientAddress = document.getElementById('recipientAddress').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            
+            if (!senderAddress || !privateKey || !recipientAddress || !amount) {
+                document.getElementById('sendResult').innerHTML = `
+                    <div class="error">Please fill in all fields</div>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/transactions/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender_address: senderAddress,
+                        recipient_address: recipientAddress,
+                        amount: amount,
+                        private_key: privateKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('sendResult').innerHTML = `
+                        <div class="success">
+                            ✅ Transaction created successfully!<br>
+                            Amount: ${amount} coins<br>
+                            From: ${senderAddress.substring(0, 20)}...<br>
+                            To: ${recipientAddress.substring(0, 20)}...<br>
+                            <br>
+                            💡 Mine a block to confirm this transaction
+                        </div>
+                    `;
+                    
+                    // Clear form
+                    document.getElementById('amount').value = '';
+                } else {
+                    document.getElementById('sendResult').innerHTML = `
+                        <div class="error">❌ ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('sendResult').innerHTML = `
+                    <div class="error">Transaction failed: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function mineBlock() {
+            try {
+                document.getElementById('output').innerHTML = `
+                    <div class="section-title">Mining...</div>
+                    <p style="text-align: center;">⛏️ Mining block, please wait...</p>
+                `;
+                
+                const response = await fetch(`${API_URL}/mine`);
+                const data = await response.json();
+                
+                document.getElementById('output').innerHTML = `
+                    <div class="section-title">Activity</div>
+                    <div class="success">
+                        ✅ Block #${data.index} mined successfully!<br>
+                        Proof: ${data.proof}<br>
+                        Miner Reward: ${data.miner_reward} coins<br>
+                        Transactions included: ${data.transactions.length}
+                    </div>
+                `;
+            } catch (error) {
+                showError('Mining failed: ' + error.message);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        function showError(message) {
+            document.getElementById('output').innerHTML = `
+                <div class="section-title">Activity</div>
+                <div class="error">❌ ${message}</div>
+            `;
+        }
+    </script>
+</body>
+</html>
