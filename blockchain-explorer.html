@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .mine-btn { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .chain-btn { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .tx-btn { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        
+        .transaction-form {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .output {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .block {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .block-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .block-detail {
+            margin: 8px 0;
+            color: #555;
+            word-break: break-all;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        pre {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 18px;
+            padding: 40px;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⛓️ Blockchain Explorer</h1>
+        
+        <div class="controls">
+            <button class="mine-btn" onclick="mineBlock()">⛏️ Mine Block</button>
+            <button class="chain-btn" onclick="viewChain()">📊 View Blockchain</button>
+            <button class="tx-btn" onclick="toggleTxForm()">💸 New Transaction</button>
+        </div>
+        
+        <div class="transaction-form" id="txForm" style="display: none;">
+            <h2 style="margin-bottom: 20px; color: #333;">Create Transaction</h2>
+            <div class="form-group">
+                <label>Sender Address</label>
+                <input type="text" id="sender" placeholder="Enter sender address">
+            </div>
+            <div class="form-group">
+                <label>Recipient Address</label>
+                <input type="text" id="recipient" placeholder="Enter recipient address">
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="amount" placeholder="Enter amount">
+            </div>
+            <button class="tx-btn" onclick="createTransaction()">Submit Transaction</button>
+        </div>
+        
+        <div class="output" id="output">
+            <p style="text-align: center; color: #999;">Click a button above to interact with the blockchain</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        function toggleTxForm() {
+            const form = document.getElementById('txForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function mineBlock() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_URL}/mine`);
+                const data = await response.json();
+                
+                document.getElementById('output').innerHTML = `
+                    <div class="success">✅ Block mined successfully!</div>
+                    <div class="block">
+                        <div class="block-header">Block #${data.index}</div>
+                        <div class="block-detail"><span class="label">Proof:</span> ${data.proof}</div>
+                        <div class="block-detail"><span class="label">Previous Hash:</span> ${data.previous_hash}</div>
+                        <div class="block-detail"><span class="label">Transactions:</span> ${data.transactions.length}</div>
+                    </div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function viewChain() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_URL}/chain`);
+                const data = await response.json();
+                
+                let html = `<div class="success">📊 Blockchain Length: ${data.length} blocks</div>`;
+                
+                data.chain.forEach(block => {
+                    html += `
+                        <div class="block">
+                            <div class="block-header">Block #${block.index}</div>
+                            <div class="block-detail"><span class="label">Timestamp:</span> ${new Date(block.timestamp * 1000).toLocaleString()}</div>
+                            <div class="block-detail"><span class="label">Proof:</span> ${block.proof}</div>
+                            <div class="block-detail"><span class="label">Previous Hash:</span> ${block.previous_hash}</div>
+                            <div class="block-detail"><span class="label">Transactions:</span> ${block.transactions.length}</div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('output').innerHTML = html;
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function createTransaction() {
+            const sender = document.getElementById('sender').value;
+            const recipient = document.getElementById('recipient').value;
+            const amount = document.getElementById('amount').value;
+            
+            if (!sender || !recipient || !amount) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            showLoading();
+            try {
+                const response = await fetch(`${API_URL}/transactions/new`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sender, recipient, amount: parseInt(amount) })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('output').innerHTML = `
+                    <div class="success">✅ Transaction created successfully!</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p style="margin-top: 15px; color: #555;">💡 Mine a new block to include this transaction in the blockchain</p>
+                `;
+                
+                document.getElementById('sender').value = '';
+                document.getElementById('recipient').value = '';
+                document.getElementById('amount').value = '';
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('output').innerHTML = '<div class="loading">⏳ Loading...</div>';
+        }
+
+        function showError(message) {
+            document.getElementById('output').innerHTML = `<div class="error">❌ Error: ${message}</div>`;
+        }
+
+        // Load blockchain on page load
+        viewChain();
+    </script>
+</body>
+</html>
